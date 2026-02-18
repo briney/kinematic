@@ -1,3 +1,8 @@
+# Data directories (large, not tracked)
+/data/
+/checkpoints/
+/outputs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
