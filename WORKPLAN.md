@@ -370,9 +370,9 @@ These three items are treated as a stabilization gate before all other work.
 - [x] P6 bond mask in collator/loss + tests
 - [x] P7 metrics CPU conversion helper + CUDA-safe tests
 - [x] P8 strict inference config schema + updated YAML
-- [ ] P9 dataset path precedence implementation + docs/tests
-- [ ] P10 dataset sampling/index correctness and reproducibility updates + tests
-- [ ] P11 implement or remove dead sampler knobs + tests/docs
+- [x] P9 dataset path precedence implementation + docs/tests
+- [x] P10 dataset sampling/index correctness and reproducibility updates + tests
+- [x] P11 implement or remove dead sampler knobs + tests/docs
 - [ ] P12 implement missing test modules
 - [ ] P13 preprocessing common-core refactor
 - [ ] P14 placeholder path preflight checks

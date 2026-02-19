@@ -19,6 +19,8 @@ def assign_noise(
     P_std: float = 1.5,
     sigma_data: float = 16.0,
     forecast_prob: float = 0.5,
+    py_rng: random.Random | None = None,
+    torch_generator: torch.Generator | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor, str]:
     """Assign per-frame noise levels using noise-as-masking.
 
@@ -29,6 +31,8 @@ def assign_noise(
     P_std : std of the log-normal distribution for sigma.
     sigma_data : EDM sigma_data (coordinate scale).
     forecast_prob : probability of choosing forecasting vs interpolation.
+    py_rng : optional Python RNG for deterministic task sampling.
+    torch_generator : optional torch Generator for deterministic sigma sampling.
 
     Returns
     -------
@@ -36,12 +40,15 @@ def assign_noise(
     conditioning_mask : (T,) bool — True for conditioning (clean) frames.
     task : 'forecasting' or 'interpolation'.
     """
+    if py_rng is None:
+        py_rng = random
+
     # Sample noise levels from log-normal (EDM convention)
-    log_sigma = torch.randn(n_frames) * P_std + P_mean
+    log_sigma = torch.randn(n_frames, generator=torch_generator) * P_std + P_mean
     sigma = sigma_data * torch.exp(log_sigma)
 
     # Choose task type
-    task = "forecasting" if random.random() < forecast_prob else "interpolation"
+    task = "forecasting" if py_rng.random() < forecast_prob else "interpolation"
 
     if task == "forecasting":
         # First frame is clean conditioning

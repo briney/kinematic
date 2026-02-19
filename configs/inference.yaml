@@ -25,8 +25,8 @@ sigma_min: 0.0001
 sigma_max: 160.0
 rho: 7
 n_denoise_steps: 20
-noise_scale: 1.75
-step_scale: 1.5
+noise_scale: 1.75  # Karras S_noise (stochastic noise amplitude during churn)
+step_scale: 1.5    # Karras S_churn (controls temporary sigma inflation per step)
 
 # === Generation ===
 mode: equilibrium          # equilibrium | unbinding

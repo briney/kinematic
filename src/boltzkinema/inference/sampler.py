@@ -7,6 +7,7 @@ the start) and 'interpolate' (conditioning frames as endpoints) modes.
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 import torch
@@ -58,6 +59,13 @@ class EDMSampler:
         self.n_steps = n_steps
         self.noise_scale = noise_scale
         self.step_scale = step_scale
+
+    def _get_churn_gamma(self, sigma_k: float) -> float:
+        """Compute Karras churn factor for a denoising step."""
+        del sigma_k  # sigma range gate not exposed; churn applies across schedule.
+        if self.step_scale <= 0 or self.n_steps <= 0:
+            return 0.0
+        return min(self.step_scale / self.n_steps, math.sqrt(2.0) - 1.0)
 
     def get_schedule(self, n_steps: int | None = None) -> torch.Tensor:
         """Karras et al. EDM noise schedule.
@@ -214,10 +222,18 @@ class EDMSampler:
                     "Encountered non-positive sigma before final denoising update."
                 )
 
+            gamma = self._get_churn_gamma(sigma_k)
+            sigma_hat = sigma_k * (1.0 + gamma)
+            x_hat = x_target
+            if gamma > 0:
+                noise = torch.randn_like(x_target) * self.noise_scale
+                noise_scale = math.sqrt(max(sigma_hat**2 - sigma_k**2, 0.0))
+                x_hat = x_hat + noise * noise_scale
+
             # Build batch and run model
             batch = self._build_batch(
-                x_cond, t_cond, x_target, t_target,
-                sigma_k, s_trunk, z_trunk, s_inputs, feats, mode,
+                x_cond, t_cond, x_hat, t_target,
+                sigma_hat, s_trunk, z_trunk, s_inputs, feats, mode,
             )
             output = self.model(batch, add_noise=False)
             x_denoised_full = output["x_denoised"].squeeze(0)
@@ -229,7 +245,7 @@ class EDMSampler:
                 x_pred = x_denoised_full[1:-1]
 
             # EDM deterministic update step
-            d = (x_target - x_pred) / sigma_k
-            x_target = x_pred + sigma_next * d
+            d = (x_hat - x_pred) / sigma_hat
+            x_target = x_hat + (sigma_next - sigma_hat) * d
 
         return x_target

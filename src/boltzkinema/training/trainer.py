@@ -303,6 +303,7 @@ def _build_dataset(config: TrainConfig) -> BoltzKinemaDataset:
         noise_P_std=config.P_std,
         sigma_data=config.sigma_data,
         forecast_prob=config.forecast_prob,
+        seed=config.seed,
     )
 
 
@@ -544,6 +545,9 @@ def train(cfg: DictConfig) -> None:
     for epoch in range(config.max_epochs):
         if done:
             break
+
+        if hasattr(dataloader, "dataset") and hasattr(dataloader.dataset, "set_epoch"):
+            dataloader.dataset.set_epoch(epoch)
 
         for batch in dataloader:
             with accelerator.accumulate(model):

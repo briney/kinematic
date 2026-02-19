@@ -54,7 +54,7 @@ mol_weights:
 # === Paths ===
 boltz2_checkpoint: ~/.boltz/boltz2_conf.ckpt
 manifest_path: data/processed/manifest.json
-trunk_cache_dir: data/processed/trunk_embeddings/
-coords_dir: data/processed/coords/
+trunk_cache_dir: data/processed/trunk_embeddings/  # optional fallback if manifest trunk paths are missing
+coords_dir: data/processed/coords/  # optional fallback root if manifest coords paths are missing
 log_every: 50
 save_every: 5000
