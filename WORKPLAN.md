@@ -41,11 +41,11 @@ These three items are treated as a stabilization gate before all other work.
 ### P1. Atom window divisibility crash in spatial-temporal atom modules
 - **Severity:** Critical
 - **Files:**
-  - `src/boltzkinema/model/spatial_temporal_atom.py:132`
-  - `src/boltzkinema/model/spatial_temporal_atom.py:135`
-  - `src/boltzkinema/model/spatial_temporal_atom.py:298`
-  - `src/boltzkinema/model/spatial_temporal_atom.py:301`
-  - `src/boltzkinema/data/collator.py:28`
+  - `src/kinematic/model/spatial_temporal_atom.py:132`
+  - `src/kinematic/model/spatial_temporal_atom.py:135`
+  - `src/kinematic/model/spatial_temporal_atom.py:298`
+  - `src/kinematic/model/spatial_temporal_atom.py:301`
+  - `src/kinematic/data/collator.py:28`
 - **Problem:** Encoder/decoder assume `M % W == 0` and reshape using `NW = M // W`, causing runtime failures for common atom counts.
 - **Proposed fix:**
   1. Add robust in-module padding/trimming in atom encoder and decoder:
@@ -66,8 +66,8 @@ These three items are treated as a stabilization gate before all other work.
 ### P2. Sampler off-by-one: denoising never reaches zero noise
 - **Severity:** Critical
 - **Files:**
-  - `src/boltzkinema/inference/sampler.py:86`
-  - `src/boltzkinema/inference/sampler.py:205`
+  - `src/kinematic/inference/sampler.py:86`
+  - `src/kinematic/inference/sampler.py:205`
 - **Problem:** Loop runs `range(self.n_steps - 1)` while schedule has `n_steps + 1` entries ending at `0`, so last update to zero is skipped.
 - **Proposed fix:**
   1. Iterate `for k in range(self.n_steps)` so final step transitions `sigma_min -> 0`.
@@ -83,8 +83,8 @@ These three items are treated as a stabilization gate before all other work.
 ### P3. `.safetensors` discovered but loaded with `torch.load`
 - **Severity:** Critical
 - **Files:**
-  - `src/boltzkinema/training/trainer.py:356`
-  - `src/boltzkinema/training/trainer.py:362`
+  - `src/kinematic/training/trainer.py:356`
+  - `src/kinematic/training/trainer.py:362`
   - `scripts/generate.py:158`
   - `scripts/generate.py:164`
 - **Problem:** Paths detect `model*.safetensors` but loading uses `torch.load`, which is incompatible.
@@ -95,7 +95,7 @@ These three items are treated as a stabilization gate before all other work.
   2. Use same loader for both training resume and inference.
   3. Add graceful error messaging if `safetensors` dependency is missing.
 - **Implementation steps:**
-  1. Create `src/boltzkinema/model/checkpoint_io.py`.
+  1. Create `src/kinematic/model/checkpoint_io.py`.
   2. Refactor `trainer.py` and `scripts/generate.py` to use it.
   3. Add dependency note in docs.
 - **Validation:**
@@ -108,7 +108,7 @@ These three items are treated as a stabilization gate before all other work.
 
 ### P4. `observed_atom_mask` loading bug
 - **Severity:** High
-- **Files:** `src/boltzkinema/data/dataset.py:83`
+- **Files:** `src/kinematic/data/dataset.py:83`
 - **Problem:** Gate checks wrong source (`ref`) before reading coords mask, causing fallback to all-ones in many cases.
 - **Proposed fix:**
   1. Load `observed_atom_mask` directly from coords NPZ if present.
@@ -136,8 +136,8 @@ These three items are treated as a stabilization gate before all other work.
 ### P6. Bond loss dilution from padded fake bonds
 - **Severity:** High
 - **Files:**
-  - `src/boltzkinema/data/collator.py:59`
-  - `src/boltzkinema/training/losses.py:286`
+  - `src/kinematic/data/collator.py:59`
+  - `src/kinematic/training/losses.py:286`
 - **Problem:** Denominator includes padded bond slots, weakening bond supervision when batches mix bonded/unbonded samples.
 - **Proposed fix:**
   1. Collator: add `bond_mask` (`True` for real bonds).
@@ -150,11 +150,11 @@ These three items are treated as a stabilization gate before all other work.
 ### P7. Metrics fail on GPU tensors due to direct `.numpy()`
 - **Severity:** High
 - **Files:**
-  - `src/boltzkinema/evaluation/metrics.py:104`
-  - `src/boltzkinema/evaluation/metrics.py:143`
-  - `src/boltzkinema/evaluation/metrics.py:194`
-  - `src/boltzkinema/evaluation/metrics.py:258`
-  - `src/boltzkinema/evaluation/metrics.py:315`
+  - `src/kinematic/evaluation/metrics.py:104`
+  - `src/kinematic/evaluation/metrics.py:143`
+  - `src/kinematic/evaluation/metrics.py:194`
+  - `src/kinematic/evaluation/metrics.py:258`
+  - `src/kinematic/evaluation/metrics.py:315`
 - **Problem:** `.numpy()` on CUDA tensors raises runtime errors.
 - **Proposed fix:**
   1. Add helper `_to_numpy_cpu(t)` using `t.detach().cpu().numpy()`.
@@ -190,7 +190,7 @@ These three items are treated as a stabilization gate before all other work.
 
 ### P9. Dataset constructor args are unused/ambiguous
 - **Severity:** Medium
-- **Files:** `src/boltzkinema/data/dataset.py:199`
+- **Files:** `src/kinematic/data/dataset.py:199`
 - **Problem:** `trunk_cache_dir` and `coords_dir` are accepted but not used; manifest paths dominate.
 - **Proposed fix:**
   1. Define clear precedence:
@@ -205,9 +205,9 @@ These three items are treated as a stabilization gate before all other work.
 ### P10. Dataset map-style semantics and frame index bias
 - **Severity:** Medium
 - **Files:**
-  - `src/boltzkinema/data/dataset.py:254`
-  - `src/boltzkinema/data/dataset.py:256`
-  - `src/boltzkinema/data/dataset.py:266`
+  - `src/kinematic/data/dataset.py:254`
+  - `src/kinematic/data/dataset.py:256`
+  - `src/kinematic/data/dataset.py:266`
 - **Problem:** `idx` is ignored; frame-start formula undercounts valid starts (`system.n_frames - self.n_frames * dt_frames` should account for last usable index).
 - **Proposed fix:**
   1. Decide model:
@@ -223,8 +223,8 @@ These three items are treated as a stabilization gate before all other work.
 ### P11. `noise_scale` and `step_scale` are dead config knobs
 - **Severity:** Medium
 - **Files:**
-  - `src/boltzkinema/inference/sampler.py:59`
-  - `src/boltzkinema/inference/sampler.py:60`
+  - `src/kinematic/inference/sampler.py:59`
+  - `src/kinematic/inference/sampler.py:60`
 - **Problem:** Exposed parameters are never used in sampling updates.
 - **Proposed fix (preferred):**
   1. Implement Karras churn/noise logic using these parameters.

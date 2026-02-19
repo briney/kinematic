@@ -29,7 +29,7 @@ import h5py
 import mdtraj
 import numpy as np
 
-from boltzkinema.data.units import infer_coordinate_unit
+from kinematic.data.units import infer_coordinate_unit
 try:
     from scripts.preprocess_common import (
         collect_manifest_entries,

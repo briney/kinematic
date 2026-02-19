@@ -1,4 +1,4 @@
-# Inference configuration for BoltzKinema trajectory generation
+# Inference configuration for Kinematic trajectory generation
 
 # === Model ===
 token_s: 384

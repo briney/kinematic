@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import torch
 
-from boltzkinema.evaluation.metrics import (
+from kinematic.evaluation.metrics import (
     ca_rmsf_correlation,
     interaction_map_similarity,
     pairwise_rmsd,

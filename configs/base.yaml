@@ -1,4 +1,4 @@
-# Shared base configuration for all BoltzKinema training phases.
+# Shared base configuration for all Kinematic training phases.
 #
 # Phase-specific configs override values from this file.
 # Usage:

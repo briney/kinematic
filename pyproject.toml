@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "boltzkinema"
+name = "kinematic"
 version = "0.1.0"
 description = "Diffusion-based biomolecular trajectory generation using Boltz-2"
 requires-python = ">=3.10"

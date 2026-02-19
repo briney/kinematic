@@ -1,4 +1,4 @@
-"""Top-level BoltzKinema model (nn.Module)."""
+"""Top-level Kinematic model (nn.Module)."""
 
 from __future__ import annotations
 
@@ -10,12 +10,12 @@ import torch.nn as nn
 from boltz.model.modules.diffusion_conditioning import DiffusionConditioning
 from boltz.model.modules.encodersv2 import RelativePositionEncoder
 
-from boltzkinema.model.diffusion_module import SpatialTemporalDiffusionModule
-from boltzkinema.model.edm import PerFrameEDM
+from kinematic.model.diffusion_module import SpatialTemporalDiffusionModule
+from kinematic.model.edm import PerFrameEDM
 
 
-class BoltzKinema(nn.Module):
-    """Top-level BoltzKinema model.
+class Kinematic(nn.Module):
+    """Top-level Kinematic model.
 
     Wraps DiffusionConditioning (from Boltz-2) + the temporal score model
     + per-frame EDM preconditioning.
@@ -88,7 +88,7 @@ class BoltzKinema(nn.Module):
             cyclic_pos_enc=cyclic_pos_enc,
         )
 
-        # --- BoltzKinema-specific modules ---
+        # --- Kinematic-specific modules ---
         self.edm = PerFrameEDM(sigma_data=sigma_data)
 
         self.score_model = SpatialTemporalDiffusionModule(

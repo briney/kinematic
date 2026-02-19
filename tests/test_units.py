@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from boltzkinema.data.units import infer_coordinate_unit
+from kinematic.data.units import infer_coordinate_unit
 
 
 def _make_linear_traj(*, spacing: float) -> np.ndarray:

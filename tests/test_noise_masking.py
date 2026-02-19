@@ -6,7 +6,7 @@ import random
 
 import torch
 
-from boltzkinema.data.noise_masking import assign_noise
+from kinematic.data.noise_masking import assign_noise
 
 
 def test_assign_noise_forecasting_masks_only_first_frame() -> None:

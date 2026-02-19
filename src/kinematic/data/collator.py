@@ -11,7 +11,7 @@ from typing import Any
 import torch
 
 
-class BoltzKinemaCollator:
+class TrajectoryCollator:
     """Pads variable-size systems to batch max and constructs batch tensors.
 
     All systems in a batch are padded to:

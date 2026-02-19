@@ -9,7 +9,7 @@ from boltz.model.layers.attentionv2 import AttentionPairBias
 from boltz.model.modules.transformersv2 import AdaLN, ConditionedTransitionBlock
 from boltz.model.modules.utils import default
 
-from boltzkinema.model.temporal_attention import TemporalAttentionWithDecay
+from kinematic.model.temporal_attention import TemporalAttentionWithDecay
 
 
 class SpatialTemporalTokenTransformerBlock(nn.Module):

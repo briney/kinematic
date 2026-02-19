@@ -1,6 +1,6 @@
 """Evaluation metrics for trajectory quality assessment."""
 
-from boltzkinema.evaluation.metrics import (
+from kinematic.evaluation.metrics import (
     ca_rmsf_correlation,
     interaction_map_similarity,
     pairwise_rmsd,

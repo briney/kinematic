@@ -13,16 +13,16 @@ from accelerate import Accelerator
 from accelerate.utils import set_seed
 from omegaconf import DictConfig
 
-from boltzkinema.data.collator import BoltzKinemaCollator
-from boltzkinema.data.dataset import BoltzKinemaDataset
-from boltzkinema.model.boltzkinema import BoltzKinema
-from boltzkinema.model.checkpoint_io import (
+from kinematic.data.collator import TrajectoryCollator
+from kinematic.data.dataset import TrajectoryDataset
+from kinematic.model.kinematic import Kinematic
+from kinematic.model.checkpoint_io import (
     find_model_weights_file,
     load_model_state_dict,
 )
-from boltzkinema.model.weight_loading import load_boltz2_weights
-from boltzkinema.training.losses import BoltzKinemaLoss
-from boltzkinema.training.scheduler import get_warmup_constant_scheduler
+from kinematic.model.weight_loading import load_boltz2_weights
+from kinematic.training.losses import TrajectoryLoss
+from kinematic.training.scheduler import get_warmup_constant_scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -250,9 +250,9 @@ def _build_config(cfg: DictConfig) -> TrainConfig:
     return TrainConfig(**kwargs)
 
 
-def _build_model(config: TrainConfig) -> BoltzKinema:
-    """Instantiate the BoltzKinema model from config."""
-    return BoltzKinema(
+def _build_model(config: TrainConfig) -> Kinematic:
+    """Instantiate the Kinematic model from config."""
+    return Kinematic(
         token_s=config.token_s,
         token_z=config.token_z,
         atom_s=config.atom_s,
@@ -276,9 +276,9 @@ def _build_model(config: TrainConfig) -> BoltzKinema:
     )
 
 
-def _build_loss(config: TrainConfig) -> BoltzKinemaLoss:
+def _build_loss(config: TrainConfig) -> TrajectoryLoss:
     """Instantiate the loss module from config."""
-    return BoltzKinemaLoss(
+    return TrajectoryLoss(
         sigma_data=config.sigma_data,
         alpha_bond=config.alpha_bond,
         beta_flex=config.beta_flex,
@@ -290,9 +290,9 @@ def _build_loss(config: TrainConfig) -> BoltzKinemaLoss:
     )
 
 
-def _build_dataset(config: TrainConfig) -> BoltzKinemaDataset:
+def _build_dataset(config: TrainConfig) -> TrajectoryDataset:
     """Instantiate the training dataset from config."""
-    return BoltzKinemaDataset(
+    return TrajectoryDataset(
         manifest_path=config.manifest_path,
         trunk_cache_dir=config.trunk_cache_dir,
         coords_dir=config.coords_dir,
@@ -424,7 +424,7 @@ def train(cfg: DictConfig) -> None:
     # Initialize WandB (main process only)
     if accelerator.is_main_process:
         accelerator.init_trackers(
-            project_name="boltzkinema",
+            project_name="kinematic",
             config={
                 f.name: getattr(config, f.name)
                 for f in config.__dataclass_fields__.values()
@@ -489,7 +489,7 @@ def train(cfg: DictConfig) -> None:
         batch_size=config.batch_size_per_gpu,
         shuffle=True,
         num_workers=config.num_workers,
-        collate_fn=BoltzKinemaCollator(),
+        collate_fn=TrajectoryCollator(),
         pin_memory=True,
         drop_last=True,
     )

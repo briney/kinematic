@@ -9,17 +9,17 @@ import boltz.model.layers.initialize as init
 from boltz.model.modules.encodersv2 import SingleConditioning
 from boltz.model.modules.utils import LinearNoBias
 
-from boltzkinema.model.spatial_temporal_atom import (
+from kinematic.model.spatial_temporal_atom import (
     SpatialTemporalAtomDecoder,
     SpatialTemporalAtomEncoder,
 )
-from boltzkinema.model.spatial_temporal_transformer import (
+from kinematic.model.spatial_temporal_transformer import (
     SpatialTemporalTokenTransformer,
 )
 
 
 class SpatialTemporalDiffusionModule(nn.Module):
-    """Orchestrates the full score model for BoltzKinema.
+    """Orchestrates the full score model for Kinematic.
 
     Replaces Boltz-2's ``DiffusionModule``. Sub-module names match
     ``DiffusionModule`` for weight loading.

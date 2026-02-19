@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from boltzkinema.training.losses import BoltzKinemaLoss
+from kinematic.training.losses import TrajectoryLoss
 
 
 # ---------------------------------------------------------------------------
@@ -16,8 +16,8 @@ B, T, M = 2, 8, 20  # batch, frames, atoms
 
 
 @pytest.fixture
-def loss_fn() -> BoltzKinemaLoss:
-    return BoltzKinemaLoss(sigma_data=16.0)
+def loss_fn() -> TrajectoryLoss:
+    return TrajectoryLoss(sigma_data=16.0)
 
 
 @pytest.fixture
@@ -69,20 +69,20 @@ def basic_output(basic_batch: dict) -> dict[str, torch.Tensor]:
 
 
 class TestGetMolWeights:
-    def test_default_weights(self, loss_fn: BoltzKinemaLoss):
+    def test_default_weights(self, loss_fn: TrajectoryLoss):
         mol_types = torch.tensor([[0, 1, 2, 3]])  # protein, dna, rna, ligand
         weights = loss_fn._get_mol_weights(mol_types)
         expected = torch.tensor([[1.0, 5.0, 5.0, 10.0]])
         assert torch.allclose(weights, expected)
 
-    def test_batch_shapes(self, loss_fn: BoltzKinemaLoss):
+    def test_batch_shapes(self, loss_fn: TrajectoryLoss):
         mol_types = torch.zeros(B, M, dtype=torch.long)
         weights = loss_fn._get_mol_weights(mol_types)
         assert weights.shape == (B, M)
 
     def test_custom_weights(self):
         custom = {"protein": 2.0, "ligand": 20.0}
-        fn = BoltzKinemaLoss(mol_weights=custom)
+        fn = TrajectoryLoss(mol_weights=custom)
         mol_types = torch.tensor([[0, 3]])
         weights = fn._get_mol_weights(mol_types)
         expected = torch.tensor([[2.0, 20.0]])
@@ -95,7 +95,7 @@ class TestGetMolWeights:
 
 
 class TestStructureLoss:
-    def test_zero_for_perfect_prediction(self, loss_fn: BoltzKinemaLoss):
+    def test_zero_for_perfect_prediction(self, loss_fn: TrajectoryLoss):
         """If x_pred == x_gt, structure loss should be 0."""
         coords = torch.randn(B, T, M, 3)
         sigma = torch.ones(B, T)
@@ -109,7 +109,7 @@ class TestStructureLoss:
         )
         assert loss.item() == pytest.approx(0.0, abs=1e-6)
 
-    def test_conditioning_frames_excluded(self, loss_fn: BoltzKinemaLoss):
+    def test_conditioning_frames_excluded(self, loss_fn: TrajectoryLoss):
         """Conditioning frames should not contribute to loss."""
         torch.manual_seed(0)
         coords = torch.randn(B, T, M, 3)
@@ -144,7 +144,7 @@ class TestStructureLoss:
         assert loss_half.item() > 0
         assert loss_none.item() > 0
 
-    def test_unobserved_atoms_excluded(self, loss_fn: BoltzKinemaLoss):
+    def test_unobserved_atoms_excluded(self, loss_fn: TrajectoryLoss):
         """Unobserved atoms should not contribute to loss."""
         torch.manual_seed(1)
         coords = torch.randn(B, T, M, 3)
@@ -172,7 +172,7 @@ class TestStructureLoss:
         )
         assert loss_partial.item() == pytest.approx(0.0, abs=1e-6)
 
-    def test_edm_weighting_applied(self, loss_fn: BoltzKinemaLoss):
+    def test_edm_weighting_applied(self, loss_fn: TrajectoryLoss):
         """Higher sigma should get higher EDM weight."""
         torch.manual_seed(2)
         coords = torch.randn(1, 2, M, 3)
@@ -197,7 +197,7 @@ class TestStructureLoss:
         # For sigma_data=16: low sigma -> very high weight, high sigma -> lower weight
         assert loss_low.item() > loss_high.item()
 
-    def test_gradient_flows(self, loss_fn: BoltzKinemaLoss):
+    def test_gradient_flows(self, loss_fn: TrajectoryLoss):
         """Gradients should flow back through x_pred."""
         coords = torch.randn(B, T, M, 3)
         x_pred = torch.randn(B, T, M, 3, requires_grad=True)
@@ -221,14 +221,14 @@ class TestStructureLoss:
 
 
 class TestBondLoss:
-    def test_no_bonds_returns_zero(self, loss_fn: BoltzKinemaLoss):
+    def test_no_bonds_returns_zero(self, loss_fn: TrajectoryLoss):
         x_pred = torch.randn(B, T, M, 3)
         batch = {}  # no bond_indices
         target_mask = torch.ones(B, T, dtype=torch.bool)
         loss = loss_fn.bond_loss(x_pred, batch, target_mask)
         assert loss.item() == pytest.approx(0.0)
 
-    def test_perfect_bonds_zero_loss(self, loss_fn: BoltzKinemaLoss):
+    def test_perfect_bonds_zero_loss(self, loss_fn: TrajectoryLoss):
         """If predicted bond lengths match reference, loss = 0."""
         x = torch.zeros(B, T, M, 3)
         # Place atom 0 at (0,0,0) and atom 1 at (1.5,0,0) -> distance 1.5
@@ -241,7 +241,7 @@ class TestBondLoss:
         loss = loss_fn.bond_loss(x, batch, target_mask)
         assert loss.item() == pytest.approx(0.0, abs=1e-5)
 
-    def test_bond_deviation_positive_loss(self, loss_fn: BoltzKinemaLoss):
+    def test_bond_deviation_positive_loss(self, loss_fn: TrajectoryLoss):
         """Wrong bond lengths -> positive loss."""
         x = torch.zeros(B, T, M, 3)
         x[:, :, 1, 0] = 3.0  # actual distance = 3.0
@@ -253,7 +253,7 @@ class TestBondLoss:
         loss = loss_fn.bond_loss(x, batch, target_mask)
         assert loss.item() > 0
 
-    def test_bond_conditioning_frames_excluded(self, loss_fn: BoltzKinemaLoss):
+    def test_bond_conditioning_frames_excluded(self, loss_fn: TrajectoryLoss):
         """Only target frames contribute to bond loss."""
         x = torch.zeros(B, T, M, 3)
         x[:, :, 1, 0] = 3.0
@@ -266,7 +266,7 @@ class TestBondLoss:
         loss = loss_fn.bond_loss(x, batch, target_mask)
         assert loss.item() == pytest.approx(0.0, abs=1e-6)
 
-    def test_bond_mask_excludes_padded_slots(self, loss_fn: BoltzKinemaLoss):
+    def test_bond_mask_excludes_padded_slots(self, loss_fn: TrajectoryLoss):
         """Padded bond slots should not contribute to numerator or denominator."""
         x = torch.zeros(1, 2, M, 3)
         # Real bond error: |3.0 - 1.5|^2 = 2.25
@@ -283,7 +283,7 @@ class TestBondLoss:
         loss = loss_fn.bond_loss(x, batch, target_mask)
         assert loss.item() == pytest.approx(2.25, abs=1e-6)
 
-    def test_bond_loss_scale_invariant_to_padding(self, loss_fn: BoltzKinemaLoss):
+    def test_bond_loss_scale_invariant_to_padding(self, loss_fn: TrajectoryLoss):
         """Adding masked padded bonds should not change the loss scale."""
         x = torch.zeros(1, 3, M, 3)
         x[:, :, 1, 0] = 3.0
@@ -310,7 +310,7 @@ class TestBondLoss:
 
 
 class TestSmoothLddtLoss:
-    def test_perfect_prediction_near_zero(self, loss_fn: BoltzKinemaLoss):
+    def test_perfect_prediction_near_zero(self, loss_fn: TrajectoryLoss):
         """Perfect prediction -> lDDT is maximal -> loss is minimal.
 
         Note: smooth lDDT uses sigmoid approximation, so the score for a
@@ -331,7 +331,7 @@ class TestSmoothLddtLoss:
         expected_floor = 1.0 - torch.sigmoid(torch.tensor([0.5, 1.0, 2.0, 4.0])).mean().item()
         assert loss.item() == pytest.approx(expected_floor, abs=0.01)
 
-    def test_large_error_high_loss(self, loss_fn: BoltzKinemaLoss):
+    def test_large_error_high_loss(self, loss_fn: TrajectoryLoss):
         """Large prediction error -> low lDDT -> high loss."""
         torch.manual_seed(11)
         coords_gt = torch.zeros(1, 4, 10, 3)
@@ -351,7 +351,7 @@ class TestSmoothLddtLoss:
         )
         assert loss.item() > 0.3  # should be substantially > 0
 
-    def test_conditioning_frames_excluded(self, loss_fn: BoltzKinemaLoss):
+    def test_conditioning_frames_excluded(self, loss_fn: TrajectoryLoss):
         """All-conditioning target mask -> no valid pairs -> degenerate loss."""
         coords = torch.randn(1, 4, 10, 3) * 3.0
         atom_mask = torch.ones(1, 10, dtype=torch.bool)
@@ -364,7 +364,7 @@ class TestSmoothLddtLoss:
         # With no target frames, no valid pairs -> lddt defaults to 0 -> loss = 1
         assert loss.item() == pytest.approx(1.0, abs=1e-5)
 
-    def test_loss_bounded(self, loss_fn: BoltzKinemaLoss):
+    def test_loss_bounded(self, loss_fn: TrajectoryLoss):
         """lDDT loss should be in [0, 1]."""
         torch.manual_seed(12)
         coords = torch.randn(1, 4, 10, 3) * 5.0
@@ -383,7 +383,7 @@ class TestSmoothLddtLoss:
 
 
 class TestFlexibilityLoss:
-    def test_zero_for_identical_ensembles(self, loss_fn: BoltzKinemaLoss):
+    def test_zero_for_identical_ensembles(self, loss_fn: TrajectoryLoss):
         """If pred and gt have identical distributions, flex loss ~ 0."""
         torch.manual_seed(20)
         coords = torch.randn(B, T, M, 3) * 3.0
@@ -397,7 +397,7 @@ class TestFlexibilityLoss:
         )
         assert loss.item() == pytest.approx(0.0, abs=1e-4)
 
-    def test_fewer_than_2_target_frames(self, loss_fn: BoltzKinemaLoss):
+    def test_fewer_than_2_target_frames(self, loss_fn: TrajectoryLoss):
         """With <2 target frames, flex loss = 0."""
         coords = torch.randn(B, T, M, 3)
         atom_mask = torch.ones(B, M, dtype=torch.bool)
@@ -413,7 +413,7 @@ class TestFlexibilityLoss:
         )
         assert loss.item() == pytest.approx(0.0)
 
-    def test_positive_for_different_distributions(self, loss_fn: BoltzKinemaLoss):
+    def test_positive_for_different_distributions(self, loss_fn: TrajectoryLoss):
         """Different pred/gt distributions -> positive flex loss."""
         torch.manual_seed(21)
         gt = torch.randn(B, T, M, 3) * 2.0
@@ -436,7 +436,7 @@ class TestFlexibilityLoss:
 
 
 class TestLigandCenterLoss:
-    def test_zero_for_perfect_centers(self, loss_fn: BoltzKinemaLoss):
+    def test_zero_for_perfect_centers(self, loss_fn: TrajectoryLoss):
         """Same coords -> same centers -> loss = 0."""
         coords = torch.randn(B, T, M, 3)
         lig_mask = torch.zeros(B, M, dtype=torch.bool)
@@ -446,7 +446,7 @@ class TestLigandCenterLoss:
         loss = loss_fn.ligand_center_loss(coords, coords, lig_mask, target_mask)
         assert loss.item() == pytest.approx(0.0, abs=1e-6)
 
-    def test_positive_for_shifted_ligand(self, loss_fn: BoltzKinemaLoss):
+    def test_positive_for_shifted_ligand(self, loss_fn: TrajectoryLoss):
         """Shifted ligand center -> positive loss."""
         coords = torch.randn(B, T, M, 3)
         pred = coords.clone()
@@ -459,7 +459,7 @@ class TestLigandCenterLoss:
         loss = loss_fn.ligand_center_loss(pred, coords, lig_mask, target_mask)
         assert loss.item() > 0
 
-    def test_conditioning_frames_excluded(self, loss_fn: BoltzKinemaLoss):
+    def test_conditioning_frames_excluded(self, loss_fn: TrajectoryLoss):
         """All conditioning -> loss = 0."""
         coords = torch.randn(B, T, M, 3)
         pred = coords.clone()
@@ -481,7 +481,7 @@ class TestLigandCenterLoss:
 class TestForward:
     def test_equilibrium_mode(
         self,
-        loss_fn: BoltzKinemaLoss,
+        loss_fn: TrajectoryLoss,
         basic_output: dict,
         basic_batch: dict,
     ):
@@ -496,7 +496,7 @@ class TestForward:
 
     def test_unbinding_mode(
         self,
-        loss_fn: BoltzKinemaLoss,
+        loss_fn: TrajectoryLoss,
         basic_output: dict,
         basic_batch: dict,
     ):
@@ -507,7 +507,7 @@ class TestForward:
 
     def test_gradient_flows_through_forward(
         self,
-        loss_fn: BoltzKinemaLoss,
+        loss_fn: TrajectoryLoss,
         basic_batch: dict,
     ):
         """Gradients flow from total loss to x_denoised."""
@@ -530,7 +530,7 @@ class TestForward:
 
     def test_no_bonds_equilibrium(
         self,
-        loss_fn: BoltzKinemaLoss,
+        loss_fn: TrajectoryLoss,
         basic_output: dict,
         basic_batch: dict,
     ):
@@ -543,7 +543,7 @@ class TestForward:
         assert total.item() > 0
         assert loss_dict["l_bond"] == pytest.approx(0.0)
 
-    def test_with_bonds(self, loss_fn: BoltzKinemaLoss, basic_output: dict, basic_batch: dict):
+    def test_with_bonds(self, loss_fn: TrajectoryLoss, basic_output: dict, basic_batch: dict):
         """Forward with bond data produces nonzero bond loss."""
         # Add bond data: atom 0 bonded to atom 1 with ref length 1.5
         basic_batch["bond_indices"] = torch.tensor([[[0, 1]], [[0, 1]]])
@@ -556,7 +556,7 @@ class TestForward:
 
     def test_loss_dict_values_are_float(
         self,
-        loss_fn: BoltzKinemaLoss,
+        loss_fn: TrajectoryLoss,
         basic_output: dict,
         basic_batch: dict,
     ):
@@ -573,7 +573,7 @@ class TestForward:
 
 class TestConstructor:
     def test_default_params(self):
-        fn = BoltzKinemaLoss()
+        fn = TrajectoryLoss()
         assert fn.sigma_data == 16.0
         assert fn.alpha_bond == 1.0
         assert fn.beta_flex == 1.0
@@ -583,7 +583,7 @@ class TestConstructor:
         assert fn.beta_center == 1.0
 
     def test_custom_params(self):
-        fn = BoltzKinemaLoss(
+        fn = TrajectoryLoss(
             sigma_data=10.0,
             alpha_bond=2.0,
             beta_flex=0.5,
@@ -596,7 +596,7 @@ class TestConstructor:
 
     def test_device_transfer(self):
         """Buffers should transfer with .to()."""
-        fn = BoltzKinemaLoss()
+        fn = TrajectoryLoss()
         # Just check that cpu works (GPU tests need hardware)
         fn = fn.to("cpu")
         assert fn._mol_weight_values.device.type == "cpu"

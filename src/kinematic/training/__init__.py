@@ -1,10 +1,10 @@
-"""Training utilities for BoltzKinema."""
+"""Training utilities for Kinematic."""
 
-from boltzkinema.training.losses import BoltzKinemaLoss
-from boltzkinema.training.scheduler import get_warmup_constant_scheduler
+from kinematic.training.losses import TrajectoryLoss
+from kinematic.training.scheduler import get_warmup_constant_scheduler
 
 __all__ = [
-    "BoltzKinemaLoss",
+    "TrajectoryLoss",
     "get_warmup_constant_scheduler",
     "TrainConfig",
     "train",
@@ -13,7 +13,7 @@ __all__ = [
 
 def __getattr__(name: str):
     if name in ("TrainConfig", "train"):
-        from boltzkinema.training.trainer import TrainConfig, train
+        from kinematic.training.trainer import TrainConfig, train
 
         globals()["TrainConfig"] = TrainConfig
         globals()["train"] = train

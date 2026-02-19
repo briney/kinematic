@@ -9,7 +9,7 @@ pytest.importorskip("boltz")
 
 from safetensors.torch import save_file
 
-from boltzkinema.model.checkpoint_io import (
+from kinematic.model.checkpoint_io import (
     find_latest_step_checkpoint,
     find_model_weights_file,
     has_unresolved_step_placeholder,

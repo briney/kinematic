@@ -9,7 +9,7 @@ import boltz.model.layers.initialize as init
 from boltz.model.modules.transformersv2 import AtomTransformer
 from boltz.model.modules.utils import LinearNoBias
 
-from boltzkinema.model.temporal_attention import TemporalAttentionWithDecay
+from kinematic.model.temporal_attention import TemporalAttentionWithDecay
 
 
 def _num_windows(n_items: int, window_size: int) -> int:
@@ -184,7 +184,7 @@ class SpatialTemporalAtomEncoder(nn.Module):
         T : int
             Number of temporal frames.
         multiplicity : int
-            Additional multiplicity (default 1, unused in standard BoltzKinema).
+            Additional multiplicity (default 1, unused in standard Kinematic).
 
         Returns
         -------

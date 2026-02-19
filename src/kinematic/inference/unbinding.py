@@ -10,7 +10,7 @@ from typing import Any
 
 import torch
 
-from boltzkinema.inference.sampler import EDMSampler
+from kinematic.inference.sampler import EDMSampler
 
 
 class UnbindingGenerator:

@@ -22,7 +22,7 @@ import logging
 import tempfile
 from pathlib import Path
 
-from boltzkinema.data.preprocessing import (
+from kinematic.data.preprocessing import (
     align_trajectory,
     remove_solvent,
 )

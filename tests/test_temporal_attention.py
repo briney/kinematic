@@ -6,7 +6,7 @@ import math
 
 import torch
 
-from boltzkinema.model.temporal_attention import TemporalAttentionWithDecay
+from kinematic.model.temporal_attention import TemporalAttentionWithDecay
 
 
 def test_temporal_attention_zero_init_is_identity() -> None:

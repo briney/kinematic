@@ -1,4 +1,4 @@
-"""BoltzKinemaDataset for trajectory training data.
+"""TrajectoryDataset for trajectory training data.
 
 Each sample provides a T-frame trajectory segment with precomputed
 trunk embeddings and per-frame noise levels for the noise-as-masking
@@ -20,8 +20,8 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from boltzkinema.data.noise_masking import assign_noise
-from boltzkinema.data.trunk_cache import load_trunk_embeddings
+from kinematic.data.noise_masking import assign_noise
+from kinematic.data.trunk_cache import load_trunk_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -180,8 +180,8 @@ def load_manifest(manifest_path: str | Path) -> list[SystemInfo]:
 # Dataset
 # ---------------------------------------------------------------------------
 
-class BoltzKinemaDataset(Dataset):
-    """Trajectory dataset for BoltzKinema training.
+class TrajectoryDataset(Dataset):
+    """Trajectory dataset for Kinematic training.
 
     Each sample provides:
       - coords: (T, N_atoms, 3) in Angstrom

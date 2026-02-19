@@ -26,7 +26,7 @@ import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
 
-from boltzkinema.model.checkpoint_io import (
+from kinematic.model.checkpoint_io import (
     find_model_weights_file,
     has_unresolved_step_placeholder,
     load_model_state_dict,
@@ -36,7 +36,7 @@ from boltzkinema.model.checkpoint_io import (
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from boltzkinema.inference.sampler import EDMSampler
+    from kinematic.inference.sampler import EDMSampler
 
 
 # ------------------------------------------------------------------
@@ -182,10 +182,10 @@ def _build_config(cfg: DictConfig, *, strict: bool = True) -> InferenceConfig:
 # ------------------------------------------------------------------
 
 def _build_model(config: InferenceConfig) -> torch.nn.Module:
-    """Build and load trained BoltzKinema model."""
-    from boltzkinema.model.boltzkinema import BoltzKinema
+    """Build and load trained Kinematic model."""
+    from kinematic.model.kinematic import Kinematic
 
-    model = BoltzKinema(
+    model = Kinematic(
         token_s=config.token_s,
         token_z=config.token_z,
         atom_s=config.atom_s,
@@ -281,7 +281,7 @@ def _load_initial_structure(
       - atom_pad_mask, token_pad_mask, atom_to_token: masks
       - system_id: string identifier
     """
-    from boltzkinema.data.trunk_cache import load_trunk_embeddings
+    from kinematic.data.trunk_cache import load_trunk_embeddings
 
     input_path = Path(os.path.expanduser(input_path))
 
@@ -498,7 +498,7 @@ def main() -> None:
     )
 
     parser = argparse.ArgumentParser(
-        description="BoltzKinema trajectory generation"
+        description="Kinematic trajectory generation"
     )
     parser.add_argument(
         "--config", type=str, required=True,
@@ -551,7 +551,7 @@ def main() -> None:
     )
 
     # Build sampler
-    from boltzkinema.inference.sampler import EDMSampler
+    from kinematic.inference.sampler import EDMSampler
 
     sampler = EDMSampler(
         model=model,
@@ -568,7 +568,7 @@ def main() -> None:
     t0 = time.time()
 
     if config.mode == "unbinding":
-        from boltzkinema.inference.unbinding import UnbindingGenerator
+        from kinematic.inference.unbinding import UnbindingGenerator
 
         generator = UnbindingGenerator(
             sampler=sampler,
@@ -594,7 +594,7 @@ def main() -> None:
             logger.info("Saved trajectory %d to %s", i, out_path)
 
     elif config.hierarchical:
-        from boltzkinema.inference.hierarchical import HierarchicalGenerator
+        from kinematic.inference.hierarchical import HierarchicalGenerator
 
         generator = HierarchicalGenerator(
             sampler=sampler,

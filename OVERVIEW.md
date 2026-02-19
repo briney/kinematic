@@ -1,4 +1,4 @@
-# BioKinema Reimplementation Plan: Boltz-2 Based All-Atom Biomolecular Dynamics
+# Kinematic: Boltz-2 Based All-Atom Biomolecular Dynamics
 
 **Version:** 1.0  
 **Date:** February 18, 2026  
@@ -10,8 +10,8 @@
 ## Table of Contents
 
 1. [Executive Summary](#1-executive-summary)
-2. [Technical Analysis of BioKinema](#2-technical-analysis-of-biokinema)
-3. [Boltz-2 → BioKinema Component Mapping](#3-boltz-2--biokinema-component-mapping)
+2. [Technical Analysis](#2-technical-analysis)
+3. [Boltz-2 Component Mapping](#3-boltz-2-component-mapping)
 4. [Architecture Specification](#4-architecture-specification)
 5. [Data Pipeline](#5-data-pipeline)
 6. [Training Procedure](#6-training-procedure)
@@ -24,19 +24,19 @@
 
 ## 1. Executive Summary
 
-BioKinema is a diffusion-based generative model that predicts continuous-time, all-atom biomolecular trajectories. It extends an AlphaFold 3-like architecture (specifically Protenix, an open AF3 reproduction) with a novel **Spatial-Temporal Diffusion Module** that jointly models spatial relationships within frames and temporal dependencies across frames.
+Kinematic is a diffusion-based generative model that predicts continuous-time, all-atom biomolecular trajectories. It extends an AlphaFold 3-like architecture with a novel **Spatial-Temporal Diffusion Module** that jointly models spatial relationships within frames and temporal dependencies across frames.
 
 This plan describes a complete reimplementation using **Boltz-2** as the structural prediction backbone instead of Protenix. Boltz-2 is chosen because:
 
 - **MIT license** — fully open for academic and commercial use
 - **Architecturally equivalent** to AF3 with Input Embedder, MSA Module, Pairformer, and Diffusion Module
-- **Pre-trained weights available** — can freeze trunk as BioKinema does
+- **Pre-trained weights available** — can freeze trunk for transfer learning
 - **Active codebase** with training infrastructure (Boltz-1 training code available; Boltz-2 training code forthcoming)
 - **Superior or equivalent** to Protenix on structure prediction benchmarks
 
 ### What we are building
 
-A PyTorch model (`BoltzKinema`) that:
+A PyTorch model (`Kinematic`) that:
 1. **Freezes** the Boltz-2 Input Embedder + Pairformer trunk to extract single (`s`) and pair (`z`) representations
 2. **Replaces** the standard single-frame Diffusion Module with a new **Spatial-Temporal Diffusion Module** that processes multi-frame trajectories
 3. **Adds** temporal attention with physically grounded exponential-decay bias derived from Langevin dynamics
@@ -60,11 +60,11 @@ A PyTorch model (`BoltzKinema`) that:
 
 ---
 
-## 2. Technical Analysis of BioKinema
+## 2. Technical Analysis
 
 ### 2.1 Overall Architecture
 
-BioKinema consists of three sequential stages:
+The model consists of three sequential stages:
 
 **Stage A — Feature Extraction (Frozen AF3 Trunk):**
 - Input: sequence, MSA, (optional) templates
@@ -120,7 +120,7 @@ This is the core innovation. Each attention layer in the diffusion module is ext
 
 ### 2.3 Noise-as-Masking Training Paradigm
 
-Instead of using a separate encoder for conditioning frames, BioKinema reinterprets diffusion noise levels as information visibility:
+Instead of using a separate encoder for conditioning frames, the noise-as-masking paradigm reinterprets diffusion noise levels as information visibility:
 - `σ = 0` → frame is fully visible (conditioning/"unmasked")
 - `σ ~ p(σ)` → frame is a prediction target ("masked")
 - `σ = σ_max` → frame is fully obscured
@@ -213,13 +213,13 @@ L_center = mean_t ||C(x̂_t) - C(x^GT_t)||²
 
 ---
 
-## 3. Boltz-2 → BioKinema Component Mapping
+## 3. Boltz-2 Component Mapping
 
 ### 3.1 Architectural Correspondence
 
-The AF3/Protenix architecture that BioKinema builds on is structurally equivalent to Boltz-2's trunk. Here is the mapping:
+The AF3/Protenix architecture is structurally equivalent to Boltz-2's trunk. Here is the mapping:
 
-| BioKinema (Protenix-based) | Boltz-2 Equivalent | Notes |
+| AF3/Protenix Component | Boltz-2 Equivalent | Notes |
 |---------------------------|-------------------|-------|
 | Input Embedder | `InputEmbedder` | Same function: sequence → s, z |
 | MSA Module (optional) | `MSAModule` | Same: evolutionary info → pair updates |
@@ -298,7 +298,7 @@ The zero-initialization of temporal attention output projections ensures that at
 ### 4.1 Module Hierarchy
 
 ```
-BoltzKinema (PyTorch Lightning Module)
+Kinematic (PyTorch Lightning Module)
 ├── BoltzTrunk (FROZEN)
 │   ├── InputEmbedder
 │   │   ├── SingleEmbedder
@@ -648,7 +648,7 @@ Raw MD Trajectories
 ### 5.3 Training Sample Construction (DataLoader)
 
 ```python
-class BioKinemaDataset(Dataset):
+class TrajectoryDataset(Dataset):
     """
     Dynamic sub-sampling of trajectory segments.
     
@@ -1117,7 +1117,7 @@ def generate_unbinding(self, complex_structure, n_trajectories=20,
 - [ ] Implement trajectory preprocessing (solvent removal, alignment, valency checks)
 - [ ] Implement Boltz-2 tokenization for all system types
 - [ ] Run trunk embedding precomputation (batch job on GPU cluster)
-- [ ] Implement `BioKinemaDataset` with dynamic sub-sampling
+- [ ] Implement `TrajectoryDataset` with dynamic sub-sampling
 - [ ] Implement noise-as-masking sample construction
 - [ ] Implement weighted dataset sampler (1:1:1 ratio)
 
@@ -1283,7 +1283,7 @@ Recall(τ)    = (1/M) Σ_j I(min_i ||g_i - e_j|| < τ)
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Base model | Boltz-2 | MIT license, pretrained weights, AF3-equivalent architecture |
-| Trunk handling | Frozen + precomputed | Massive training speedup, follows BioKinema's approach |
+| Trunk handling | Frozen + precomputed | Massive training speedup |
 | Temporal attention init | Zero-init output projection | Model starts as single-frame predictor, gradually learns temporal |
 | λ_h initialization | ALiBi geometric [0.004, 0.7] | Covers fast (side chains) to slow (domain motions) timescales |
 | Training paradigm | Noise-as-masking | Unified forecasting + interpolation, no separate encoders |

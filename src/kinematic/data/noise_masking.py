@@ -1,6 +1,6 @@
 """Noise-as-masking sample construction.
 
-Implements the per-frame noise assignment strategy from BioKinema:
+Implements the per-frame noise assignment strategy:
 conditioning frames get sigma=0 (clean), target frames get EDM
 log-normal noise levels. Supports both forecasting and interpolation
 tasks.

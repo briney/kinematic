@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 import torch
 
-from boltzkinema.data.dataset import BoltzKinemaDataset, SystemInfo
+from kinematic.data.dataset import TrajectoryDataset, SystemInfo
 
 
 def _make_system(tmp_path, *, include_observed_mask: bool) -> tuple[SystemInfo, str]:
@@ -160,7 +160,7 @@ def test_dataset_uses_manifest_paths_before_override_dirs(tmp_path) -> None:
         },
     )
 
-    dataset = BoltzKinemaDataset(
+    dataset = TrajectoryDataset(
         manifest_path=manifest_path,
         trunk_cache_dir=override_trunk_dir,
         coords_dir=override_coords_dir,
@@ -203,7 +203,7 @@ def test_dataset_falls_back_to_override_dirs_when_manifest_paths_missing(tmp_pat
         },
     )
 
-    dataset = BoltzKinemaDataset(
+    dataset = TrajectoryDataset(
         manifest_path=manifest_path,
         trunk_cache_dir=trunk_override_dir,
         coords_dir=coords_override_dir,
@@ -238,7 +238,7 @@ def test_dataset_fails_fast_when_paths_cannot_be_resolved(tmp_path) -> None:
     )
 
     with pytest.raises(FileNotFoundError, match=system_id):
-        BoltzKinemaDataset(manifest_path=manifest_path, n_frames=4)
+        TrajectoryDataset(manifest_path=manifest_path, n_frames=4)
 
 
 def test_dataset_getitem_is_idx_deterministic_and_order_independent(tmp_path) -> None:
@@ -272,7 +272,7 @@ def test_dataset_getitem_is_idx_deterministic_and_order_independent(tmp_path) ->
         },
     )
 
-    dataset = BoltzKinemaDataset(
+    dataset = TrajectoryDataset(
         manifest_path=manifest_path,
         n_frames=4,
         dt_ranges={"toy": [2.0, 2.0]},
@@ -320,7 +320,7 @@ def test_dataset_reproducible_across_dataloader_worker_counts(tmp_path) -> None:
         },
     )
 
-    dataset = BoltzKinemaDataset(
+    dataset = TrajectoryDataset(
         manifest_path=manifest_path,
         n_frames=4,
         dt_ranges={"toy": [2.0, 2.0]},
@@ -383,7 +383,7 @@ def test_dataset_max_start_includes_last_valid_index(tmp_path) -> None:
         },
     )
 
-    dataset = BoltzKinemaDataset(
+    dataset = TrajectoryDataset(
         manifest_path=manifest_path,
         n_frames=4,
         dt_ranges={"toy": [2.0, 2.0]},  # fixed dt_frames=2

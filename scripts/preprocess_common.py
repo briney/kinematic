@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def _load_preprocessing_ops() -> dict[str, Any]:
     """Import preprocessing ops lazily to keep module import lightweight."""
-    from boltzkinema.data.preprocessing import (
+    from kinematic.data.preprocessing import (
         build_observation_mask,
         convert_trajectory,
         extract_atom_metadata,

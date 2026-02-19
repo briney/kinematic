@@ -26,7 +26,7 @@ from pathlib import Path
 
 import numpy as np
 
-from boltzkinema.data.preprocessing import (
+from kinematic.data.preprocessing import (
     align_trajectory,
     remove_solvent,
 )

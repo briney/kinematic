@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import torch
 
-from boltzkinema.data.collator import BoltzKinemaCollator
+from kinematic.data.collator import TrajectoryCollator
 
 
 def _make_sample(*, n_atoms: int, n_tokens: int, has_bonds: bool) -> dict:
@@ -37,7 +37,7 @@ def _make_sample(*, n_atoms: int, n_tokens: int, has_bonds: bool) -> dict:
 
 
 def test_collator_sets_bond_mask_for_real_vs_padded_bonds() -> None:
-    collator = BoltzKinemaCollator()
+    collator = TrajectoryCollator()
 
     sample_with_bonds = _make_sample(n_atoms=4, n_tokens=2, has_bonds=True)
     sample_without_bonds = _make_sample(n_atoms=3, n_tokens=2, has_bonds=False)

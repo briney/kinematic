@@ -32,7 +32,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from boltzkinema.data.trunk_cache import save_trunk_embeddings
+from kinematic.data.trunk_cache import save_trunk_embeddings
 
 logger = logging.getLogger(__name__)
 

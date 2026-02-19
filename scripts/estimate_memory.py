@@ -1,4 +1,4 @@
-"""Estimate GPU memory requirements for BoltzKinema training.
+"""Estimate GPU memory requirements for Kinematic training.
 
 Computes per-sample and per-GPU memory based on model dimensions,
 number of frames (T), tokens (N), and atoms (M).
@@ -296,7 +296,7 @@ def recommend_batch_config(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Estimate GPU memory for BoltzKinema training"
+        description="Estimate GPU memory for Kinematic training"
     )
     parser.add_argument("--T", type=int, default=32, help="Number of frames (default: 32)")
     parser.add_argument("--N", type=int, default=200, help="Number of tokens (default: 200)")
@@ -329,7 +329,7 @@ def main() -> None:
     # Compute for comparison T values or single T
     t_values = [20, 32, 50] if args.T == 32 else [args.T]
 
-    print("BoltzKinema Memory Estimation")
+    print("Kinematic Memory Estimation")
     print("=" * 70)
     print(f"  Tokens (N): {args.N}")
     print(f"  Atoms  (M): {args.M}")

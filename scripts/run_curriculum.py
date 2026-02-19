@@ -1,8 +1,8 @@
 """Multi-phase training curriculum orchestrator.
 
-Runs the BoltzKinema training curriculum sequentially:
+Runs the Kinematic training curriculum sequentially:
     Phase 0: Monomer dynamics pretraining (CATH2 + ATLAS + Octapeptides)
-    Phase 1: Full mixed training (BioKinema + BioEmu datasets)
+    Phase 1: Full mixed training (equilibrium dynamics datasets)
     Phase 1.5: MegaSim mutant enrichment (optional, skipped by default)
     Phase 2: Unbinding fine-tuning (DD-13M)
 
@@ -130,7 +130,7 @@ def _build_phase_command(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run BoltzKinema multi-phase training curriculum"
+        description="Run Kinematic multi-phase training curriculum"
     )
     parser.add_argument(
         "--start-phase",

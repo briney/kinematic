@@ -7,7 +7,7 @@ import torch
 
 pytest.importorskip("boltz")
 
-from boltzkinema.model.spatial_temporal_atom import (
+from kinematic.model.spatial_temporal_atom import (
     SpatialTemporalAtomDecoder,
     SpatialTemporalAtomEncoder,
     _num_windows,

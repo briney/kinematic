@@ -1,4 +1,4 @@
-"""Dataset acquisition script for BoltzKinema training data.
+"""Dataset acquisition script for Kinematic training data.
 
 Downloads all raw datasets needed for training:
   - ATLAS: GROMACS trajectories (~30 GB)
@@ -358,7 +358,7 @@ ALL_DATASETS = {
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Download BoltzKinema training data")
+    parser = argparse.ArgumentParser(description="Download Kinematic training data")
     parser.add_argument(
         "--datasets",
         type=str,

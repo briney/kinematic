@@ -10,11 +10,11 @@ pytest.importorskip("boltz")
 from boltz.model.modules.encodersv2 import AtomAttentionDecoder, AtomAttentionEncoder
 from boltz.model.modules.transformersv2 import DiffusionTransformerLayer
 
-from boltzkinema.model.spatial_temporal_atom import (
+from kinematic.model.spatial_temporal_atom import (
     SpatialTemporalAtomDecoder,
     SpatialTemporalAtomEncoder,
 )
-from boltzkinema.model.spatial_temporal_transformer import (
+from kinematic.model.spatial_temporal_transformer import (
     SpatialTemporalTokenTransformerBlock,
 )
 

@@ -10,7 +10,7 @@ import torch
 logger = logging.getLogger(__name__)
 
 
-# Prefix mapping rules: (boltz2_prefix, boltzkinema_prefix)
+# Prefix mapping rules: (boltz2_prefix, kinematic_prefix)
 # Order matters — first match wins.
 _PREFIX_RULES: list[tuple[str, str]] = [
     # DiffusionConditioning: same name in both models
@@ -28,7 +28,7 @@ _LOADABLE_PREFIXES: tuple[str, ...] = (
     "structure_module.score_model.",
 )
 
-# Temporal components that should NOT be loaded (they're new in BoltzKinema)
+# Temporal components that should NOT be loaded (they're new in Kinematic)
 _TEMPORAL_PATTERNS: tuple[str, ...] = (
     "temporal_attn.",
     "temporal_layers.",
@@ -36,7 +36,7 @@ _TEMPORAL_PATTERNS: tuple[str, ...] = (
 
 
 def _map_key(boltz2_key: str) -> str | None:
-    """Map a Boltz-2 state_dict key to a BoltzKinema key.
+    """Map a Boltz-2 state_dict key to a Kinematic key.
 
     Returns None if the key should be skipped.
     """
@@ -56,16 +56,16 @@ def load_boltz2_weights(
     checkpoint_path: str,
     strict: bool = False,
 ) -> dict[str, Any]:
-    """Load Boltz-2 pretrained weights into a BoltzKinema model.
+    """Load Boltz-2 pretrained weights into a Kinematic model.
 
-    Maps Boltz-2 checkpoint keys to BoltzKinema parameter names and loads
+    Maps Boltz-2 checkpoint keys to Kinematic parameter names and loads
     all spatial (non-temporal) weights. Temporal components remain at their
     randomly initialized values (zero output projections).
 
     Parameters
     ----------
-    model : BoltzKinema
-        The BoltzKinema model to load weights into.
+    model : Kinematic
+        The Kinematic model to load weights into.
     checkpoint_path : str
         Path to a Boltz-2 checkpoint (.ckpt or .pt file).
     strict : bool
@@ -131,7 +131,7 @@ def load_boltz2_weights(
 
     if missing and strict:
         raise RuntimeError(
-            f"Missing {len(missing)} keys in BoltzKinema model: {missing[:10]}..."
+            f"Missing {len(missing)} keys in Kinematic model: {missing[:10]}..."
         )
 
     if missing:
@@ -169,7 +169,7 @@ def verify_temporal_zero_init(model: torch.nn.Module) -> bool:
 
     Parameters
     ----------
-    model : BoltzKinema
+    model : Kinematic
         The model to verify.
 
     Returns

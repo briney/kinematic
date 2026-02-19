@@ -1,4 +1,4 @@
-# Phase 1: Full mixed training with BioKinema + BioEmu datasets
+# Phase 1: Full mixed training with equilibrium dynamics datasets
 # Initialize from: Phase 0 checkpoint
 # Duration: 350K-400K steps
 

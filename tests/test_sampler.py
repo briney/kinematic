@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from boltzkinema.inference.sampler import EDMSampler
+from kinematic.inference.sampler import EDMSampler
 
 
 class _ConstantDenoiser(torch.nn.Module):

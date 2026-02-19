@@ -1,4 +1,4 @@
-"""Loss functions for BoltzKinema training."""
+"""Loss functions for Kinematic training."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 
 
-class BoltzKinemaLoss(nn.Module):
-    """Combined loss for BoltzKinema training.
+class TrajectoryLoss(nn.Module):
+    """Combined loss for Kinematic training.
 
     Components:
         1. L_struct: EDM-weighted structure reconstruction (MSE + bond + smooth lDDT)

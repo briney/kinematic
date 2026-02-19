@@ -20,7 +20,7 @@ import argparse
 
 from omegaconf import OmegaConf
 
-from boltzkinema.model.checkpoint_io import (
+from kinematic.model.checkpoint_io import (
     has_unresolved_step_placeholder,
     resolve_checkpoint_path,
 )
@@ -42,7 +42,7 @@ def _preflight_checkpoint_paths(cfg) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="BoltzKinema training with HuggingFace Accelerate"
+        description="Kinematic training with HuggingFace Accelerate"
     )
     parser.add_argument(
         "--config",
@@ -76,7 +76,7 @@ def main() -> None:
     _preflight_checkpoint_paths(cfg)
 
     # Import here to avoid slow imports before arg parsing
-    from boltzkinema.training.trainer import train
+    from kinematic.training.trainer import train
 
     train(cfg)
 

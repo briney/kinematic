@@ -23,7 +23,7 @@ class EDMSampler:
     Parameters
     ----------
     model : nn.Module
-        BoltzKinema model instance.
+        Kinematic model instance.
     sigma_min : float
         Minimum noise level (absolute, coordinate units).
     sigma_max : float
