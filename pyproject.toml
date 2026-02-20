@@ -22,6 +22,10 @@ dependencies = [
     "biopython",
     "rdkit",
     "einops",
+    "click>=8.1",
+    "hydra-core>=1.3",
+    "requests",
+    "tqdm",
 ]
 
 [project.optional-dependencies]
@@ -29,6 +33,9 @@ dev = [
     "pytest",
     "ruff",
 ]
+
+[project.scripts]
+kinematic = "kinematic.cli:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]

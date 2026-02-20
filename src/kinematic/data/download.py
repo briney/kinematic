@@ -1,4 +1,4 @@
-"""Dataset acquisition script for Kinematic training data.
+"""Dataset acquisition utilities for Kinematic training data.
 
 Downloads all raw datasets needed for training:
   - ATLAS: GROMACS trajectories (~30 GB)
@@ -8,19 +8,12 @@ Downloads all raw datasets needed for training:
   - CATH2: CATH domain trajectories (~28 GB compressed)
   - MegaSim: Wildtype + mutant trajectories (~10 GB compressed)
   - Octapeptides: Peptide trajectories (~511 MB compressed)
-
-Usage:
-    python scripts/download_data.py --datasets all --output-dir data/raw
-    python scripts/download_data.py --datasets atlas,cath2 --output-dir data/raw
 """
 
 from __future__ import annotations
 
-import argparse
 import io
 import logging
-import shutil
-import subprocess
 import time
 import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -36,7 +29,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
-def _download_file(url: str, dest: Path, desc: str = "") -> None:
+def download_file(url: str, dest: Path, desc: str = "") -> None:
     """Download a file with progress bar, skipping if it already exists."""
     if dest.exists():
         logger.info("Skipping existing file: %s", dest)
@@ -54,7 +47,7 @@ def _download_file(url: str, dest: Path, desc: str = "") -> None:
                     pbar.update(len(chunk))
 
 
-def _download_zenodo_files(
+def download_zenodo_files(
     record_id: str,
     filenames: list[str] | None,
     output_dir: Path,
@@ -81,7 +74,7 @@ def _download_zenodo_files(
             continue
         file_info = files[fname]
         dest = output_dir / fname
-        _download_file(
+        download_file(
             file_info["links"]["self"],
             dest,
             desc=fname,
@@ -179,21 +172,11 @@ def download_misato(output_dir: Path) -> None:
         "val_MD.txt",
         "test_MD.txt",
     ]
-    _download_zenodo_files(
+    download_zenodo_files(
         record_id="7711953",
         filenames=core_files,
         output_dir=misato_dir,
     )
-
-    # Optional: topology/restart files and electron densities
-    # These are large and not required for basic training.
-    # Uncomment to download:
-    # _download_zenodo_files(
-    #     record_id="7711953",
-    #     filenames=["parameter_restart_files_MD.tar.gz",
-    #                "densities_gfn2w_mrc.tar.gz"],
-    #     output_dir=misato_dir,
-    # )
 
 
 def download_dynarepo(output_dir: Path, max_workers: int = 4) -> None:
@@ -291,7 +274,7 @@ def download_cath2(output_dir: Path) -> None:
     """
     cath2_dir = output_dir / "cath2"
     logger.info("Downloading CATH2 dataset to %s", cath2_dir)
-    _download_zenodo_files(
+    download_zenodo_files(
         record_id="15629740",
         filenames=["MSR_cath2.zip"],
         output_dir=cath2_dir,
@@ -312,7 +295,7 @@ def download_megasim(output_dir: Path) -> None:
     """
     megasim_dir = output_dir / "megasim"
     logger.info("Downloading MegaSim dataset to %s", megasim_dir)
-    _download_zenodo_files(
+    download_zenodo_files(
         record_id="15641184",
         filenames=[
             "megasim_wildtype_merge.zip",
@@ -337,7 +320,7 @@ def download_octapeptides(output_dir: Path) -> None:
     """
     octa_dir = output_dir / "octapeptides"
     logger.info("Downloading Octapeptides dataset to %s", octa_dir)
-    _download_zenodo_files(
+    download_zenodo_files(
         record_id="15641199",
         filenames=None,  # Download all files
         output_dir=octa_dir,
@@ -350,7 +333,7 @@ def download_octapeptides(output_dir: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Main
+# Registry and orchestrator
 # ---------------------------------------------------------------------------
 
 ALL_DATASETS = {
@@ -364,41 +347,21 @@ ALL_DATASETS = {
 }
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Download Kinematic training data")
-    parser.add_argument(
-        "--datasets",
-        type=str,
-        default="all",
-        help="Comma-separated dataset names, or 'all'",
-    )
-    parser.add_argument(
-        "--output-dir",
-        type=str,
-        default="data/raw",
-        help="Root output directory for raw data",
-    )
-    args = parser.parse_args()
+def download_datasets(names: list[str], output_dir: Path) -> None:
+    """Download one or more datasets by name.
 
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-
-    output_dir = Path(args.output_dir)
+    Parameters
+    ----------
+    names : list of dataset names (keys from ALL_DATASETS).
+    output_dir : root output directory for raw data.
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
-
-    if args.datasets == "all":
-        datasets = list(ALL_DATASETS.keys())
-    else:
-        datasets = [d.strip() for d in args.datasets.split(",")]
-
-    for name in datasets:
+    for name in names:
         if name not in ALL_DATASETS:
-            logger.error("Unknown dataset: %s (available: %s)", name, list(ALL_DATASETS.keys()))
+            logger.error(
+                "Unknown dataset: %s (available: %s)", name, list(ALL_DATASETS.keys())
+            )
             continue
         logger.info("=== Downloading %s ===", name)
         ALL_DATASETS[name](output_dir)
-
     logger.info("Done.")
-
-
-if __name__ == "__main__":
-    main()

@@ -113,13 +113,14 @@ def _build_phase_command(
         "accelerate", "launch",
         f"--num_processes={num_processes}",
         "--mixed_precision=bf16",
-        "scripts/train.py",
+        "-m", "kinematic", "train",
     ]
 
+    # Config names are stems (e.g. "train_phase0"), not full paths
     if base_config:
-        cmd.extend(["--base-config", base_config])
+        cmd.extend(["--base-config", Path(base_config).stem])
 
-    cmd.extend(["--config", phase.config_path])
+    cmd.extend(["--config", Path(phase.config_path).stem])
 
     # Override resume_from if we resolved a checkpoint from a prior phase
     if resume_from:

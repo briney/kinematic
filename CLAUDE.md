@@ -30,10 +30,16 @@ ruff check --fix src scripts tests
 
 ### Train
 ```bash
-accelerate launch scripts/train.py --base-config configs/base.yaml --config configs/train_phase0.yaml
-accelerate launch scripts/train.py --config configs/train_phase0.yaml lr=2e-4  # CLI overrides
+accelerate launch -m kinematic train --base-config base --config train_phase0
+accelerate launch -m kinematic train --config train_phase0 lr=2e-4  # CLI overrides
 ```
 Config merge order: `base.yaml` → phase config → CLI overrides (OmegaConf).
+
+### Download Training Data
+```bash
+kinematic download-training-data --datasets all --output-dir data/raw
+kinematic download-training-data --datasets atlas,cath2 --output-dir data/raw
+```
 
 ### Inference
 ```bash
@@ -43,7 +49,7 @@ python scripts/generate.py --config configs/inference.yaml --input structure.pdb
 ## Architecture
 
 ### Source Layout
-`src/` layout with all code under `src/kinematic/`. Five subpackages: `model/`, `data/`, `training/`, `inference/`, `evaluation/`.
+`src/` layout with all code under `src/kinematic/`. Six subpackages: `cli/`, `model/`, `data/`, `training/`, `inference/`, `evaluation/`.
 
 ### Model Hierarchy
 ```
