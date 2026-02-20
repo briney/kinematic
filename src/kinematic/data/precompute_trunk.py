@@ -37,8 +37,15 @@ def load_boltz2_model(
 
     Returns the model in eval mode on the specified device.
     """
-    from boltz.main import Boltz2DiffusionParams, MSAModuleArgs, PairformerArgsV2
+    from boltz.main import Boltz2DiffusionParams, MSAModuleArgs, PairformerArgsV2, download_boltz2
     from boltz.model.models.boltz2 import Boltz2
+
+    checkpoint_path = Path(checkpoint_path)
+    if not checkpoint_path.exists():
+        logger.info("Checkpoint not found at %s, downloading Boltz-2 weights...", checkpoint_path)
+        cache_dir = checkpoint_path.parent
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        download_boltz2(cache_dir)
 
     diffusion_params = Boltz2DiffusionParams()
     pairformer_args = PairformerArgsV2()
