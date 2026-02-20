@@ -172,6 +172,11 @@ def prepare_features_for_system(
     n_tokens = int(residue_indices.max()) + 1
     n_atoms = len(ref_coords)
 
+    # Pad atom count to multiple of Boltz-2 atom attention window size.
+    # AtomEncoder does K = N // W then view(B, K, W, ...) which requires N % W == 0.
+    ATOM_WINDOW_SIZE = 32
+    n_atoms_padded = ((n_atoms - 1) // ATOM_WINDOW_SIZE + 1) * ATOM_WINDOW_SIZE
+
     # Build token-level features
     # For the trunk, we need at minimum:
     #   - token_pad_mask, token_bonds, residue_index, asym_id, entity_id,
@@ -229,12 +234,17 @@ def prepare_features_for_system(
     # Token index
     feats["token_index"] = torch.arange(n_tokens, device=device).unsqueeze(0)
 
-    # Atom features
-    feats["ref_pos"] = torch.from_numpy(ref_coords).float().unsqueeze(0).to(device)
-    feats["atom_pad_mask"] = torch.ones(1, n_atoms, device=device)
+    # Atom features (padded to n_atoms_padded; padding stays zero)
+    ref_pos = torch.zeros(1, n_atoms_padded, 3, device=device)
+    ref_pos[0, :n_atoms] = torch.from_numpy(ref_coords).float().to(device)
+    feats["ref_pos"] = ref_pos
+
+    atom_pad_mask = torch.zeros(1, n_atoms_padded, device=device)
+    atom_pad_mask[0, :n_atoms] = 1.0
+    feats["atom_pad_mask"] = atom_pad_mask
 
     # Atom-to-token mapping
-    atom_to_token = torch.zeros(1, n_atoms, n_tokens, device=device)
+    atom_to_token = torch.zeros(1, n_atoms_padded, n_tokens, device=device)
     for i, ri in enumerate(residue_indices):
         if 0 <= ri < n_tokens:
             atom_to_token[0, i, ri] = 1.0
@@ -263,7 +273,7 @@ def prepare_features_for_system(
 
     # Atom name/element features (for input embedder)
     # Boltz-2 encodes atom names as 4 characters, each ord(c)-32, one-hot 64
-    name_chars = np.zeros((n_atoms, 4), dtype=np.int64)
+    name_chars = np.zeros((n_atoms_padded, 4), dtype=np.int64)
     for i, name in enumerate(atom_names):
         chars = [ord(c) - 32 for c in str(name).strip()]
         for j, c in enumerate(chars[:4]):
@@ -271,7 +281,7 @@ def prepare_features_for_system(
     name_chars_t = torch.from_numpy(name_chars).to(device)
     feats["ref_atom_name_chars"] = torch.nn.functional.one_hot(
         name_chars_t, num_classes=64
-    ).float().unsqueeze(0)  # (1, n_atoms, 4, 64)
+    ).float().unsqueeze(0)  # (1, n_atoms_padded, 4, 64)
 
     # Boltz-2 encodes elements by atomic number, one-hot 128
     _element_to_z = {
@@ -281,23 +291,27 @@ def prepare_features_for_system(
         "Ca": 20, "Mn": 25, "Fe": 26, "Co": 27, "Ni": 28, "Cu": 29,
         "Zn": 30, "Se": 34, "Br": 35, "I": 53,
     }
-    elem_idx = np.array(
-        [_element_to_z.get(str(e).strip(), 0) for e in elements],
-        dtype=np.int64,
-    )
+    elem_idx = np.zeros(n_atoms_padded, dtype=np.int64)
+    for i, e in enumerate(elements):
+        elem_idx[i] = _element_to_z.get(str(e).strip(), 0)
     elem_t = torch.from_numpy(elem_idx).to(device)
     feats["ref_element"] = torch.nn.functional.one_hot(
         elem_t, num_classes=128
-    ).float().unsqueeze(0)  # (1, n_atoms, 128)
+    ).float().unsqueeze(0)  # (1, n_atoms_padded, 128)
 
-    feats["ref_charge"] = torch.zeros(1, n_atoms, device=device)
+    feats["ref_charge"] = torch.zeros(1, n_atoms_padded, device=device)
     feats["ref_chirality"] = torch.zeros(
-        1, n_atoms, dtype=torch.long, device=device
+        1, n_atoms_padded, dtype=torch.long, device=device
     )
-    feats["ref_space_uid"] = torch.from_numpy(
+    ref_space_uid = torch.zeros(1, n_atoms_padded, dtype=torch.long, device=device)
+    ref_space_uid[0, :n_atoms] = torch.from_numpy(
         residue_indices.astype(np.int64)
-    ).unsqueeze(0).to(device)
-    feats["atom_resolved_mask"] = torch.ones(1, n_atoms, device=device)
+    ).to(device)
+    feats["ref_space_uid"] = ref_space_uid
+
+    atom_resolved_mask = torch.zeros(1, n_atoms_padded, device=device)
+    atom_resolved_mask[0, :n_atoms] = 1.0
+    feats["atom_resolved_mask"] = atom_resolved_mask
 
     # Disto features
     feats["disto_center"] = torch.zeros(1, n_tokens, 3, device=device)
