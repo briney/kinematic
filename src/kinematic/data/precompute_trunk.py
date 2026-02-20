@@ -200,6 +200,11 @@ def prepare_features_for_system(
                 token_bonds[0, i + 1, i, 0] = 1.0
     feats["token_bonds"] = token_bonds
 
+    # Bond type (integer type per token pair; 0 = no bond)
+    feats["type_bonds"] = torch.zeros(
+        1, n_tokens, n_tokens, dtype=torch.long, device=device
+    )
+
     # Residue index (for relative position encoding)
     # Map: for each token, use the residue index
     token_res_idx = torch.zeros(1, n_tokens, dtype=torch.long, device=device)
